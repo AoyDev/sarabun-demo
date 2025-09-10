@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  paperless_app:
+    build:
+      context: ./sarabun_demo
+      dockerfile: Dockerfile
+    image: paperless-app
+    container_name: paperless_app
+    ports:
+      - "8001:8000"   
+    volumes:
+      - ./sarabun_demo:/var/www
+      - paperless_vendor:/var/www/vendor
+      - paperless_cache:/var/www/bootstrap/cache
+    depends_on:
+      - paperless_mysql
+    working_dir: /var/www
+    command: php artisan serve --host=0.0.0.0 --port=8000
+
+  paperless_mysql:
+    image: mysql:8.0
+    container_name: paperless_mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: paperless
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_PASSWORD: root
+      MYSQL_USER: paperless
+    ports:
+      - "3307:3306"   # เปลี่ยนเป็น 3307 เพื่อไม่ชนกับโปรเจคอื่น
+    volumes:
+      - paperless_db:/var/lib/mysql
+
+  paperless_phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: paperless_phpmyadmin
+    restart: always
+    ports:
+      - "8081:80"   # เปลี่ยนเป็น 8081 เพื่อไม่ชนกับโปรเจคอื่น
+    environment:
+      PMA_HOST: paperless_mysql
+      PMA_USER: paperless
+      PMA_PASSWORD: root
+    depends_on:
+      - paperless_mysql
+
+volumes:
+  paperless_db:
+  paperless_vendor:
+  paperless_cache:
